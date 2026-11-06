@@ -1,5 +1,8 @@
 # doppio
 
+> _**doppio**_  
+> _A serving of espresso made with a double shot of coffee, usually about twice the volume of a single espresso._
+
 caffeinate-based amphetamine replacement
 
 ## Motivation
