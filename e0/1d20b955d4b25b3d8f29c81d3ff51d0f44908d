@@ -1,0 +1,22 @@
+install.sh
+  s_64a4c9a3c0d003::t_fb06836ba1c7a4 10-11,13,16-21
+  s_64a4c9a3c0d003::t_9cbafd12a3b25c 2-3,12,14-15
+README.md
+  s_64a4c9a3c0d003::t_76379829dee8f5 22-30
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "e01d20b955d4b25b3d8f29c81d3ff51d0f44908d",
+  "prompts": {},
+  "sessions": {
+    "s_64a4c9a3c0d003": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e4e4f9cf9ffdQ2C001OIpyihCp",
+        "model": "unknown"
+      },
+      "human_author": "Kyle Andelin <7277377+andelink@users.noreply.github.com>"
+    }
+  }
+}
