@@ -1,0 +1,188 @@
+#!/bin/sh
+set -eu
+
+# The installed name follows the file name (Contents/Resources/<cli-name>)
+APP=$(basename "$0")
+STATE_DIR="${DOPPIO_STATE_DIR:-$HOME/Library/Application Support/$APP}"
+PID_FILE="$STATE_DIR/pid"
+STARTED_FILE="$STATE_DIR/started"
+DURATION_FILE="$STATE_DIR/duration"
+FLAGS="${DOPPIO_FLAGS:--d -i}"
+
+usage() {
+	cat <<EOF
+usage: $APP <command> [args]
+
+commands:
+  on [DURATION]   start a session (e.g. 30m, 2h, 90s; omit = indefinite)
+  off             stop the current session
+  toggle          toggle an indefinite session on/off
+  status          print session status; exit 0 if on, 1 if off
+  open            open the menu bar app
+  close           gracefully quit the menu bar app (stops the session)
+  quickstart [DURATION|indefinite]
+                  get or set the control-click quick-start duration
+  help            show this help
+
+environment:
+  DOPPIO_FLAGS       caffeinate flags (default: -d -i)
+  DOPPIO_STATE_DIR   state directory (default: ~/Library/Application Support/$APP)
+EOF
+}
+
+now() { date +%s; }
+
+is_running() {
+	[ -f "$PID_FILE" ] && kill -0 "$(cat "$PID_FILE")" 2>/dev/null
+}
+
+clear_state() {
+	rm -f "$PID_FILE" "$STARTED_FILE" "$DURATION_FILE"
+}
+
+# Convert a duration argument to seconds. Empty means 0 (indefinite).
+parse_duration() {
+	d=$1
+	[ -z "$d" ] && { echo 0; return; }
+	num=$d
+	mult=60
+	case $d in
+		*s) mult=1;    num=${d%s} ;;
+		*m) mult=60;   num=${d%m} ;;
+		*h) mult=3600; num=${d%h} ;;
+	esac
+	case $num in
+		*[!0-9]*|"") return 1 ;;
+	esac
+	echo $(( num * mult ))
+}
+
+cmd_on() {
+	dur=$(parse_duration "${1:-}") || {
+		echo "$APP: invalid duration '${1:-}'" >&2
+		exit 2
+	}
+	is_running && kill "$(cat "$PID_FILE")" 2>/dev/null || true
+	clear_state
+	mkdir -p "$STATE_DIR"
+	if [ "$dur" -gt 0 ]; then
+		nohup caffeinate $FLAGS -t "$dur" >/dev/null 2>&1 &
+	else
+		nohup caffeinate $FLAGS >/dev/null 2>&1 &
+	fi
+	echo $! > "$PID_FILE"
+	now > "$STARTED_FILE"
+	echo "$dur" > "$DURATION_FILE"
+	cmd_status
+}
+
+cmd_off() {
+	if is_running; then
+		kill "$(cat "$PID_FILE")" 2>/dev/null || true
+	fi
+	clear_state
+	echo "off"
+}
+
+cmd_status() {
+	if is_running; then
+		dur=$(cat "$DURATION_FILE" 2>/dev/null || echo 0)
+		if [ "$dur" -gt 0 ]; then
+			elapsed=$(( $(now) - $(cat "$STARTED_FILE") ))
+			remaining=$(( dur - elapsed ))
+			[ "$remaining" -lt 0 ] && remaining=0
+			echo "on $remaining"
+		else
+			echo "on indefinite"
+		fi
+		exit 0
+	else
+		clear_state
+		echo "off"
+		exit 1
+	fi
+}
+
+cmd_toggle() {
+	if is_running; then
+		cmd_off
+	else
+		cmd_on
+	fi
+}
+
+# Resolve the enclosing .app bundle (the CLI lives at Contents/Resources/<name>,
+# possibly reached through a symlink like ~/.local/bin/<name>).
+app_bundle() {
+	src=$0
+	if [ -L "$src" ]; then
+		src=$(readlink "$src")
+		case $src in /*) ;; *) src="$(dirname -- "$0")/$src" ;; esac
+	fi
+	bundle=$(CDPATH= cd -- "$(dirname -- "$src")/../.." 2>/dev/null && pwd)
+	case $bundle in
+		*.app) echo "$bundle" ;;
+		*) return 1 ;;
+	esac
+}
+
+# The applet's control-click action reads `quickStart` from its user defaults
+# (bundle id com.<cli-name>.app) and passes it straight to `doppio on`.
+cmd_quickstart() {
+	domain="com.$APP.app"
+	case "${1:-}" in
+		"")
+			defaults read "$domain" quickStart 2>/dev/null || echo "indefinite"
+			;;
+		indefinite)
+			defaults delete "$domain" quickStart 2>/dev/null || true
+			echo "quickStart: indefinite"
+			;;
+		*)
+			dur=$(parse_duration "$1") || {
+				echo "$APP: invalid duration '$1'" >&2
+				exit 2
+			}
+			[ "$dur" -gt 0 ] || {
+				echo "$APP: invalid duration '$1'" >&2
+				exit 2
+			}
+			defaults write "$domain" quickStart "$1"
+			echo "quickStart: $1"
+			;;
+	esac
+}
+
+cmd_open() {
+	bundle=$(app_bundle) || {
+		echo "$APP: not running from an app bundle" >&2
+		exit 1
+	}
+	open "$bundle"
+}
+
+cmd_close() {
+	bundle=$(app_bundle) || {
+		echo "$APP: not running from an app bundle" >&2
+		exit 1
+	}
+	name=$(basename "$bundle" .app)
+	if pgrep -f "$name.app/Contents/MacOS" >/dev/null 2>&1; then
+		osascript -e "tell application \"$name\" to quit" >/dev/null 2>&1 || true
+		echo "quit $name"
+	else
+		echo "$name is not running"
+	fi
+}
+
+case "${1:-help}" in
+	on)     shift; cmd_on "$@" ;;
+	off)    cmd_off ;;
+	toggle) cmd_toggle ;;
+	status) cmd_status ;;
+	open)   cmd_open ;;
+	close)  cmd_close ;;
+	quickstart) shift; cmd_quickstart "$@" ;;
+	help|-h|--help) usage ;;
+	*) echo "$APP: unknown command '$1'" >&2; usage >&2; exit 2 ;;
+esac
