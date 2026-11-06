@@ -20,15 +20,15 @@ Some corporate IT policies block the popular amphetamine application. This proje
 
 ```sh
 curl https://raw.githubusercontent.com/andelink/doppio/main/install.sh | bash
+
+# optionally pass options through with `bash -s --`:
+curl https://raw.githubusercontent.com/andelink/doppio/main/install.sh | bash -s -- --name Caffeine
+
+# or if you cloned the repo locally:
+./install.sh
 ```
 
 This downloads the source, builds `Doppio.app`, installs it to `~/Applications`, symlinks the `doppio` CLI to `~/.local/bin`, registers Doppio to open at login, and launches it. Cloning the repo and running `./install.sh` directly works too.
-
-Pass options through with `bash -s --`:
-
-```sh
-curl https://raw.githubusercontent.com/andelink/doppio/main/install.sh | bash -s -- --name Caffeine
-```
 
 `install.sh` options:
 
@@ -72,8 +72,16 @@ Default assertions are `caffeinate -d -i` (display + system stay awake). Overrid
 ## Uninstall
 
 ```sh
-./uninstall.sh                      # or: ./uninstall.sh --name Caffeine
+curl -fsSL https://raw.githubusercontent.com/andelink/doppio/main/uninstall.sh | bash
+
+# optionally pass options through with `bash -s --`:
+curl -fsSL https://raw.githubusercontent.com/andelink/doppio/main/uninstall.sh | bash -s -- --name Caffeine
+
+# or if you cloned the repo locally:
+./uninstall.sh
 ```
+
+Removes the app, the CLI symlink, the login item, and all state. From a repo checkout, `./uninstall.sh` does the same thing.
 
 ## Development
 
