@@ -1,0 +1,21 @@
+README.md
+  s_64a4c9a3c0d003::t_fe382b4b259593 31,75-80
+  s_64a4c9a3c0d003::t_9a1ce8daa6139e 32
+  s_64a4c9a3c0d003::t_6e4a810c3bf6ad 81
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "51f61ab42332d8ee257f0b934dacad69aa5219e6",
+  "prompts": {},
+  "sessions": {
+    "s_64a4c9a3c0d003": {
+      "agent_id": {
+        "tool": "opencode",
+        "id": "ses_e4e4f9cf9ffdQ2C001OIpyihCp",
+        "model": "unknown"
+      },
+      "human_author": "Kyle Andelin <7277377+andelink@users.noreply.github.com>"
+    }
+  }
+}
