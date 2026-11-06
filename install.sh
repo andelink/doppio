@@ -1,9 +1,23 @@
 #!/bin/sh
+# Run from local clone (./install.sh) or piped from curl:
+#   curl https://raw.githubusercontent.com/andelink/doppio/main/install.sh | bash
 set -eu
 
 DEFAULT_APP_NAME="Doppio"
 SRC_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
 APP_DIR="${DOPPIO_APP_DIR:-$HOME/Applications}"
+
+# Piped via curl there is no checkout next to this script: fetch the source
+# archive and hand off to its installer with our arguments unchanged.
+if [ ! -f "$SRC_DIR/src/applet.applescript" ]; then
+	ARCHIVE_URL=${DOPPIO_ARCHIVE_URL:-https://github.com/andelink/doppio/archive/refs/heads/main.tar.gz}
+	TMP=$(mktemp -d)
+	trap 'rm -rf "$TMP"' EXIT
+	echo "==> fetching $ARCHIVE_URL"
+	curl -fsSL "$ARCHIVE_URL" | tar xz -C "$TMP"
+	"$TMP"/*/install.sh "$@"
+	exit $?
+fi
 
 APP_NAME=$DEFAULT_APP_NAME
 WITH_CLI=1
@@ -28,7 +42,8 @@ options:
   -h, --help       show this help
 
 environment:
-  DOPPIO_APP_DIR   install location (default: ~/Applications)
+  DOPPIO_APP_DIR      install location (default: ~/Applications)
+  DOPPIO_ARCHIVE_URL  source tarball for curl-piped installs (default: main branch)
 EOF
 }
 

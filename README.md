@@ -19,10 +19,15 @@ Some corporate IT policies block the popular amphetamine application. This proje
 ## Install
 
 ```sh
-curl -L https://github.com/andelink/doppio/archive/refs/heads/main.tar.gz | tar xz
-cd doppio-main
-./install.sh
-open ~/Applications/Doppio.app
+curl https://raw.githubusercontent.com/andelink/doppio/main/install.sh | bash
+```
+
+This downloads the source, builds `Doppio.app`, installs it to `~/Applications`, symlinks the `doppio` CLI to `~/.local/bin`, registers Doppio to open at login, and launches it. Cloning the repo and running `./install.sh` directly works too.
+
+Pass options through with `bash -s --`:
+
+```sh
+curl https://raw.githubusercontent.com/andelink/doppio/main/install.sh | bash -s -- --name Caffeine
 ```
 
 `install.sh` options:
@@ -67,7 +72,7 @@ Default assertions are `caffeinate -d -i` (display + system stay awake). Overrid
 ## Uninstall
 
 ```sh
-./uninstall.sh                      # or: ./uninstall.sh --name Espresso
+./uninstall.sh                      # or: ./uninstall.sh --name Caffeine
 ```
 
 ## Development
