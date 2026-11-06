@@ -1,0 +1,14 @@
+README.md
+  h_9ad3b525ceb822 3-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "7a342cf11afb7f911be76fd38d746a0466e70fda",
+  "prompts": {},
+  "humans": {
+    "h_9ad3b525ceb822": {
+      "author": "Kyle Andelin <7277377+andelink@users.noreply.github.com>"
+    }
+  }
+}
